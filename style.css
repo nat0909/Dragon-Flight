@@ -1,0 +1,38 @@
+html, body {
+  margin: 0;
+  padding: 0;
+}
+canvas {
+  display: block;
+}
+#motion-controls {
+  box-sizing: border-box;
+  width: 900px;
+  padding: 12px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  background: #102c3b;
+  color: #eef7fa;
+  font: 14px Arial, sans-serif;
+}
+#motion-controls label { display: flex; align-items: center; gap: 6px; }
+#motion-controls input[type="number"], #motion-id { width: 82px; }
+#motion-url { width: 205px; }
+#motion-controls button { cursor: pointer; padding: 5px 12px; }
+#motion-controls output, #motion-controls small { flex-basis: 100%; }
+#game-stage { width: 900px; background: #000; }
+#game-stage:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+}
+#game-stage:fullscreen canvas {
+  width: min(100vw, calc(100vh * 1.5)) !important;
+  height: auto !important;
+  aspect-ratio: 3 / 2;
+}

@@ -1,0 +1,70 @@
+Dragon Flight Motion Tracker Setup
+
+Connection
+Serve the game over HTTP. Enable Motion tracker, enter the WebSocket server URL,
+configure the movement half-ranges, and click Connect. The default address is
+ws://127.0.0.1:8080. For a server on another PC, replace 127.0.0.1 with its LAN IP.
+The game HTTP server and motion WebSocket server are separate services.
+This game-side adapter does not read USB hardware or start the device SDK server.
+
+Accepted JSON messages
+LiveMotion: {"props":[{"id":1,"pos":{"x":10,"y":20,"z":30}}]}
+Single prop: {"pos":{"x":10,"y":20,"z":30}}
+Simple bridge: {"x":10,"y":20,"z":30}
+The position key is also accepted as an alias for pos.
+X and Y must be finite JSON numbers. Z and orientation are ignored.
+Other messages, such as the LiveMotion hello message, are ignored.
+Set Prop ID to select a specific props[].id. If blank, the first received prop
+is selected; when it has an ID, subsequent packets stay locked to that ID.
+For multiple sensors, the server must provide stable unique IDs.
+
+Start-relative movement
+The receiver continuously stores the latest position. Every successful Start
+or Restart begins a 3-second preparation countdown. When the countdown ends,
+the latest fresh XY position is copied as the new origin. The dragon starts at
+the center of its playable area. No obstacles or scoring advance during the
+countdown. If the position is stale at the end, the game waits for fresh data
+before capturing the origin and starting. Repeated start inputs do not reset
+the countdown. Leaving the game window during preparation cancels the countdown;
+start again after returning. Movement is an absolute offset
+from that origin, not an accumulation of per-frame changes. The origin remains
+fixed for the round. Returning the prop to its starting position centers the dragon.
+Start is blocked if no valid position has arrived within the last 500 milliseconds.
+
+Movement range and units
+X half-range is the physical distance from the starting point to either horizontal
+edge. Y half-range is the distance to either vertical edge. Values use the same
+units as incoming data. Defaults of 20 are placeholders, not a measured device range.
+Example for 0.5 meters of movement from center to each edge:
+  meter data: 0.5
+  centimeter data: 50
+  inch data: approximately 19.685
+The supplied PolhemusTracker.cpp requests inches via SetMetric(FALSE), but verify
+the actual running server's units. The tracker volume is not the movement half-range.
+Invert Y is enabled by default so increasing physical Y moves the dragon upward.
+Use Invert X or Invert Y if the installation's directions are reversed.
+Settings are applied on Connect, which returns the game to its start screen.
+
+Input ownership and interruptions
+Mouse movement and WASD cannot steer in tracker mode. Mouse clicks, Space, and
+Enter can still start a round. Tracker loss pauses obstacles and scoring after
+500 milliseconds without valid XY data. Browser focus loss also pauses the game.
+Fresh data does not automatically resume gameplay: click Resume, click the canvas,
+or press Space/Enter. Resume preserves the original origin. Reconnecting returns
+to the start screen, and the next Start captures a new origin.
+Disable Motion tracker to return to the original mouse and keyboard controls.
+
+Round timer and victory
+Each round lasts ROUND_DURATION_SECONDS (top of sketch.js; default 60). The clock
+starts only when gameplay begins after the countdown and origin capture. It does
+not advance while paused for tracker loss or focus loss. Surviving until it reaches
+zero plays a short flight to Berk, then shows the victory screen; start input is
+ignored until that screen appears. Hitting a rock first still ends in Game Over:
+the dragon tumbles into the sea (about 2.5 seconds, score and clock frozen) and
+start input is ignored until the Game Over screen appears.
+
+Validation
+Syntax and simulated-input checks cover start gating, origin timing, XY mapping,
+ignored Z, input isolation, prop identity, boundary clamping, stale-data pause,
+resume without recentering, and a new origin on restart. Physical-device operation
+must still be checked with the actual running WebSocket server and sensor.
